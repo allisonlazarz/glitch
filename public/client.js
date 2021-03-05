@@ -1,10 +1,6 @@
 // client-side js
 // run by the browser each time your view template referencing it is loaded
 
-const bookTitles = [];
-const id = [];
-let authorNames = {};
-
 // define variables that reference elements on our page
 const booksForm = document.forms[0];
 const bookInput = document.getElementById("bookTitle");
@@ -16,14 +12,22 @@ const authorList = document.getElementById("authors");
 const idList = document.getElementById("ids");
 const clearButton = document.querySelector("#clear-books");
 let selectedAuthorId;
+let selectedAuthorFirstName;
+let selectedAuthorLastName;
 let select = document.getElementById("authorName");
 let option;
+let authorDetails = {};
+let authorFirstName;
+let authorLastName;
+let authorId;
 
 try {
   fetch("/getAuthors")
     .then(res => res.json())
     .then(function(response) {
       response.forEach(function(item) {
+        //example of how to create an array with dynamic data
+        authorDetails[item.id] = item;
         option = document.createElement("option");
         option.value = `${item.id}`;
         option.text = `${item.first_name} ${item.last_name}`;
@@ -33,59 +37,24 @@ try {
 
         authorSelectDropDown.onchange = function() {
           selectedAuthorId = document.getElementById("authorName").value;
-          console.log("selectedAuthor:", selectedAuthorId);
-          if (selectedAuthorId === "Other") {
-            console.log("Other selected");
-            let authorNameDiv = document.createElement("div");
-            // let authorInputField = document.createElement("input");
-            // authorInputField.setAttribute("type", "file");
-            // authorInputField.setAttribute("name", "file");
-            let authorFirstNameInput = document.createElement("input");
-            authorFirstNameInput.setAttribute(
-              "id",
-              "authorFirstNameInputField"
-            );
-            authorFirstNameInput.setAttribute("type", "text");
-            authorFirstNameInput.setAttribute("name", "addAuthorFirstName");
-            authorFirstNameInput.setAttribute(
-              "placeholder",
-              "Author First Name*"
-            );
-            authorFirstNameInput.setAttribute("required", "");
-            addAuthorDiv.appendChild(authorFirstNameInput);
-            document
-              .getElementById("authorFirstNameInputField")
-              .appendChild(authorNameDiv);
-            //
-            let authorLastNameInput = document.createElement("input");
-            authorLastNameInput.setAttribute("id", "authorLastNameInputField");
-            authorLastNameInput.setAttribute("type", "text");
-            authorLastNameInput.setAttribute("name", "addAuthorLastName");
-            authorLastNameInput.setAttribute(
-              "placeholder",
-              "Author Last Name*"
-            );
-            authorLastNameInput.setAttribute("required", "");
-            addAuthorDiv.appendChild(authorLastNameInput);
-            document
-              .getElementById("authorLastNameInputField")
-              .appendChild(authorNameDiv);
+          let selectedAuthor = authorDetails[selectedAuthorId];
+          if (selectedAuthor) {
+            console.log("selectedAuthor$$:", selectedAuthor);
+            authorId = selectedAuthor.id;
+            authorFirstName = selectedAuthor.first_name;
+            authorLastName = selectedAuthor.last_name;
+            console.log("authorFirstName2", authorFirstName);
+            console.log("authorLastName2", authorLastName);
           } else {
-            if (
-              document.contains(
-                document.getElementById("authorFirstNameInputField")
-              ) &&
-              document.contains(
-                document.getElementById("authorLastNameInputField")
-              )
-            ) {
-              document.getElementById("authorFirstNameInputField").remove();
-              document.getElementById("authorLastNameInputField").remove();
-            }
-            console.log("Selected option:", selectedAuthorId);
+            let splitAuthorName = selectedAuthorId.split(" ");
+            authorFirstName = splitAuthorName[0];
+            authorLastName = splitAuthorName[1];
+            console.log("authorFirstName2", authorFirstName);
+            console.log("authorLastName2", authorLastName);
           }
         };
       });
+      //console.log('stuff', authorDetails['31'].first_name);
     });
 } catch (e) {
   console.log("ERROR", e);
@@ -96,24 +65,23 @@ booksForm.onsubmit = async event => {
   event.preventDefault();
   let data;
   //can remove references to first and last name, split the selectedAuthorId by ''
-  const otherAuthorFirstNameValue = document.getElementById(
-    "authorFirstNameInputField"
-  );
-  const otherAuthorLastNameValue = document.getElementById(
-    "authorLastNameInputField"
-  );
-  // if (selectedAuthorId === "Other") {
-  if(! /\d+/.test(selectedAuthorId)){
+  console.log("authorId", authorId);
+  console.log("authorNameValue", authorId);
+  console.log("authorFirstName", authorFirstName);
+  console.log("authorLastName", authorLastName);
+
+  if (!/\d+/.test(authorId)) {
+    // NEW AUTHOR
     console.log("OTHER");
     const numOfAuthorIdOptions = document.querySelectorAll(
       "#authorName option"
     );
-    // const newAuthorId = numOfAuthorIdOptions.length - 1
-    // console.log('newAuthorId', newAuthorId);
+
     data = {
       bookTitle: bookInput.value,
-      authorFirstName: otherAuthorFirstNameValue.value,
-      authorLastName: otherAuthorLastNameValue.value
+      authorId: authorId,
+      authorFirstName: authorFirstName,
+      authorLastName: authorLastName
     };
     console.log(
       "data:",
@@ -121,12 +89,27 @@ booksForm.onsubmit = async event => {
       "||",
       data.authorFirstName,
       "||",
+      data.authorLastName,
+      "||",
+      data.authorId
+    );
+  } else {
+    data = {
+      bookTitle: bookInput.value,
+      authorId: authorId,
+      authorFirstName: authorFirstName,
+      authorLastName: authorLastName
+    };
+    console.log(
+      "data:",
+      data.bookTitle,
+      "||",
+      data.authorId,
+      "||",
+      data.authorFirstName,
+      "||",
       data.authorLastName
     );
-  } 
-else {
-    data = { bookTitle: bookInput.value, authorId: selectedAuthorId };
-    console.log("data:", data.bookTitle, "||", data.authorId);
   }
   try {
     let res = await fetch("/addBookAndAuthor", {

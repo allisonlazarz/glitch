@@ -44,10 +44,7 @@ db.serialize(() => {
   }
 });
 
-// http://expressjs.com/en/starter/basic-routing.html
-// app.get("/", (request, response) => {
-//   response.sendFile(`${__dirname}/views/index.html`);
-// });
+
 
 // endpoint to get all the books in the database
 app.get("/getAuthors", (request, response) => {
@@ -60,11 +57,14 @@ app.get("/getAuthors", (request, response) => {
 app.post("/addBookAndAuthor", (request, response) => {
   console.log("request.body:", request.body);
   
-  //undefined
-  console.log("request.body.authorName", request.body.authorName);
+  //New Author Entered
+  console.log("request.body.authorId", request.body.authorId);
+  console.log("request.body.bookTitle,", request.body.bookTitle)
+  console.log("request.body.authorFirstName", request.body.authorFirstName);
+  console.log("request.body.authorLastName", request.body.authorLastName);
 
-  if (request.body.authorFirstName === undefined) {
-    console.log("HERE!");
+  if (request.body.authorId !== undefined) {
+    console.log("EXISTING ENTRY!");
     if (!process.env.DISALLOW_WRITE) {
       db.run(
         `INSERT INTO Books (title, author_id) VALUES (?, ?)`,
@@ -83,7 +83,8 @@ app.post("/addBookAndAuthor", (request, response) => {
   } else {
     let authorFirstName = request.body.authorFirstName;
     let authorLastName = request.body.authorLastName;
-    console.log('ELSE!');
+    let bookTitle = request.body.bookTitle;
+    console.log('!');
     db.run(
       `INSERT INTO Authors (first_name, last_name) VALUES (?, ?)`,
       //request.body.authorId,
@@ -96,7 +97,7 @@ app.post("/addBookAndAuthor", (request, response) => {
           let lastId = this.lastID;
           db.run(
             `INSERT INTO Books (title, author_id) VALUES (?, ?)`,
-            request.body.bookTitle,
+            bookTitle,
             lastId,
             function(error) {
               if (error) {
@@ -109,6 +110,7 @@ app.post("/addBookAndAuthor", (request, response) => {
         }
       }
     );
+  
   } 
 });
 
@@ -122,156 +124,3 @@ const cleanseString = function(string) {
 var listener = app.listen(process.env.PORT, () => {
   console.log(`Your app is listening on port ${listener.address().port}`);
 });
-
-//////////////
-// OLD CODE //
-/////////////
-// server.js
-// where your node app starts
-
-// init project
-// const express = require("express");
-// const bodyParser = require("body-parser");
-// const app = express();
-// const fs = require("fs");
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
-
-// we've started you off with Express,
-// but feel free to use whatever libs or frameworks you'd like through `package.json`.
-
-// http://expressjs.com/en/starter/static-files.html
-// app.use(express.static("public"));
-
-// init sqlite db
-// const dbFile = "./.data/sqlite.db";
-// const exists = fs.existsSync(dbFile);
-// const sqlite3 = require("sqlite3").verbose();
-// const db = new sqlite3.Database(dbFile);
-
-// if ./.data/sqlite.db does not exist, create it, otherwise print records to console
-// db.serialize(() => {
-//   if (!exists) {
-//     db.run(
-//       "CREATE TABLE Dreams (id INTEGER PRIMARY KEY AUTOINCREMENT, dream TEXT)"
-//     );
-//     console.log("New table Dreams created!");
-
-//     // insert default dreams
-//     db.serialize(() => {
-//       db.run(
-//         'INSERT INTO Dreams (dream) VALUES ("Find and count some sheep"), ("Climb a really tall mountain"), ("Wash the dishes")'
-//       );
-//     });
-//   } else {
-//     console.log('Database "Dreams" ready to go!');
-//     db.each("SELECT * from Dreams", (err, row) => {
-//       if (row) {
-//         console.log(`record: ${row.dream}`);
-//       }
-//     });
-//   }
-// });
-
-// http://expressjs.com/en/starter/basic-routing.html
-// app.get("/", (request, response) => {
-//   response.sendFile(`${__dirname}/views/index2.html`);
-// });
-
-// endpoint to get all the dreams in the database
-// app.get("/getDreams", (request, response) => {
-//   db.all("SELECT * from Dreams", (err, rows) => {
-//     response.send(JSON.stringify(rows));
-//   });
-// });
-
-// endpoint to add a dream to the database
-// app.post("/addDream", (request, response) => {
-//   console.log(`add to dreams ${request.body.dream}`);
-
-// DISALLOW_WRITE is an ENV variable that gets reset for new projects
-// so they can write to the database
-//   if (!process.env.DISALLOW_WRITE) {
-//     const cleansedDream = cleanseString(request.body.dream);
-//     db.run(`INSERT INTO Dreams (dream) VALUES (?)`, cleansedDream, function(error) {
-//       if (error) {
-//         response.send({ message: "error!" });
-//       } else {
-//         let lastId = this.lastID
-//         response.send({ message: "success", lastAddedId: lastId});
-//       }
-//     });
-//   }
-// });
-
-// endpoint to remove a dream from the database
-// app.delete("/removeDream", (request, response) => {
-//   console.log(`remove a dream ${request.body.dream}`);
-//   db.each(
-//     //use ID and select id from Dreams where id = x
-//     "SELECT * from Dreams",
-//       (err, row, dream) => {
-//         console.log("row", row);
-//         db.run(`DELETE FROM Dreams WHERE Dream=${dream}`, row.dream, error => {
-//           if (row) {
-//             console.log(`deleted dream ${row.dream}`);
-//           }
-//         });
-//       },
-//       err => {
-//         if (err) {
-//           response.send({ message: "error!" });
-//         } else {
-//           response.send({ message: "success" });
-//         }
-//       }
-//     );
-
-// DISALLOW_WRITE is an ENV variable that gets reset for new projects
-// so they can write to the database
-//   if (!process.env.DISALLOW_WRITE) {
-//     const cleansedDream = cleanseString(request.body.dream);
-//     db.run(`INSERT INTO Dreams (dream) VALUES (?)`, cleansedDream, error => {
-//       if (error) {
-//         response.send({ message: "error!" });
-//       } else {
-//         response.send({ message: "success" });
-//       }
-//     });
-//   }
-// });
-
-// endpoint to clear dreams from the database
-// app.get("/clearDreams", (request, response) => {
-//   // DISALLOW_WRITE is an ENV variable that gets reset for new projects so you can write to the database
-//   if (!process.env.DISALLOW_WRITE) {
-//     db.each(
-//       "SELECT * from Dreams",
-//       (err, row) => {
-//         console.log("row", row);
-//         db.run(`DELETE FROM Dreams WHERE ID=?`, row.id, error => {
-//           if (row) {
-//             console.log(`deleted row ${row.id}`);
-//           }
-//         });
-//       },
-//       err => {
-//         if (err) {
-//           response.send({ message: "error!" });
-//         } else {
-//           response.send({ message: "success" });
-//         }
-//       }
-//     );
-//   }
-// });
-
-// helper function that prevents html/css/script malice
-// const cleanseString = function(string) {
-//   return string.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-// };
-
-// listen for requests :)
-// var listener = app.listen(process.env.PORT, () => {
-//   console.log(`Your app is listening on port ${listener.address().port}`);
-// });
